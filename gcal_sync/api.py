@@ -36,6 +36,7 @@ from .model import (
     CalendarBaseModel,
     Calendar,
     CalendarBasic,
+    ColorsResponse,
     Event,
     EventStatusEnum,
     SyntheticEventId,
@@ -49,6 +50,7 @@ __all__ = [
     "CalendarEventStoreService",
     "CalendarListRequest",
     "CalendarListResponse",
+    "ColorsResponse",
     "ListEventsRequest",
     "SyncEventsRequest",
     "ListEventsResponse",
@@ -72,6 +74,7 @@ CALENDAR_LIST_URL = "users/me/calendarList"
 CALENDAR_GET_URL = "calendars/{calendar_id}"
 CALENDAR_EVENTS_URL = "calendars/{calendar_id}/events"
 CALENDAR_EVENT_ID_URL = "calendars/{calendar_id}/events/{event_id}"
+COLORS_URL = "colors"
 INSTANCES_URL = "calendars/{calendar_id}/events/{event_id}/instances"
 
 
@@ -359,6 +362,11 @@ class GoogleCalendarService:
             CALENDAR_GET_URL.format(calendar_id=calendar_id)
         )
         return CalendarBasic(**result)
+
+    async def async_get_colors(self) -> ColorsResponse:
+        """Return the Google Calendar color definitions."""
+        result = await self._auth.get_json(COLORS_URL)
+        return ColorsResponse(**result)
 
     async def async_get_event(self, calendar_id: str, event_id: str) -> Event:
         """Return an event based on the event id."""

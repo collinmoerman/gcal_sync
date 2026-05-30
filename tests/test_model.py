@@ -15,6 +15,8 @@ from gcal_sync.model import (
     AccessRole,
     Attendee,
     Calendar,
+    ColorDefinition,
+    ColorsResponse,
     DateOrDatetime,
     Event,
     EventStatusEnum,
@@ -60,6 +62,25 @@ def test_calendar() -> None:
     assert calendar.access_role == AccessRole.OWNER
     assert calendar.background_color == "#9a9cff"
     assert calendar.foreground_color == "#000000"
+
+
+def test_colors_response() -> None:
+    """Exercise parsing of the Google Calendar colors API response."""
+
+    colors = ColorsResponse.model_validate(
+        {
+            "kind": "calendar#colors",
+            "event": {"1": {"background": "#a4bdfc", "foreground": "#1d1d1d"}},
+            "calendar": {"1": {"background": "#ac725e", "foreground": "#1d1d1d"}},
+        }
+    )
+
+    assert colors.event["1"] == ColorDefinition(
+        background="#a4bdfc", foreground="#1d1d1d"
+    )
+    assert colors.calendar["1"] == ColorDefinition(
+        background="#ac725e", foreground="#1d1d1d"
+    )
 
 
 def test_calendar_timezone() -> None:
@@ -798,6 +819,21 @@ def test_invalid_rrule_until_time() -> None:
                 "recurrence": ["RRULE:FREQ=WEEKLY;UNTIL=20220202T1234T;BYDAY=TU"],
             }
         )
+
+
+def test_event_color_id() -> None:
+    """Exercise parsing of the Google Calendar event color id."""
+
+    event = Event.model_validate(
+        {
+            "summary": "Summary",
+            "colorId": "7",
+            "start": {"date": "2022-10-01"},
+            "end": {"date": "2022-10-02"},
+        }
+    )
+
+    assert event.color_id == "7"
 
 
 def test_event_fields_mask() -> None:

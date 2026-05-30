@@ -48,6 +48,8 @@ __all__ = [
     "ReminderMethod",
     "AccessRole",
     "CalendarBasic",
+    "ColorDefinition",
+    "ColorsResponse",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +57,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATE_STR_FORMAT = "%Y-%m-%d"
 EVENT_FIELDS = (
-    "id,iCalUID,summary,start,end,description,location,transparency,status,eventType,"
+    "id,iCalUID,summary,start,end,description,location,colorId,transparency,status,eventType,"
     "visibility,attendees,attendeesOmitted,recurrence,recurringEventId,originalStartTime,"
     "reminders"
 )
@@ -150,6 +152,26 @@ class CalendarBaseModel(BaseModel):
     def _remove_self(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Rename any 'self' fields from all child values of the dictionary."""
         return _remove_self_fields(values)
+
+
+class ColorDefinition(CalendarBaseModel):
+    """A Google Calendar color definition."""
+
+    background: str
+    """The background color in hexadecimal format."""
+
+    foreground: str
+    """The foreground color in hexadecimal format."""
+
+
+class ColorsResponse(CalendarBaseModel):
+    """Api response containing Google Calendar color definitions."""
+
+    calendar: dict[str, ColorDefinition] = {}
+    """Calendar colors keyed by Google color id."""
+
+    event: dict[str, ColorDefinition] = {}
+    """Event colors keyed by Google color id."""
 
 
 class Calendar(CalendarBaseModel):
@@ -596,6 +618,9 @@ class Event(CalendarBaseModel):
 
     location: Optional[str] = None
     """Geographic location of the event as free-form text."""
+
+    color_id: Optional[str] = Field(alias="colorId", default=None)
+    """Google Calendar event color id."""
 
     transparency: str = Field(default="opaque")
     """Whether the event blocks time on the calendar.

@@ -17,6 +17,8 @@ from gcal_sync.model import (
     AccessRole,
     Calendar,
     CalendarBasic,
+    ColorDefinition,
+    ColorsResponse,
     DateOrDatetime,
     Event,
     ReminderMethod,
@@ -106,6 +108,29 @@ async def test_list_calendars_empty_reply(
     assert result.items == []
 
 
+async def test_get_colors(
+    calendar_service_cb: Callable[[], Awaitable[GoogleCalendarService]],
+    json_response: ApiResult,
+    url_request: Callable[[], str],
+) -> None:
+    """Test getting Google Calendar color definitions."""
+
+    json_response(
+        {
+            "kind": "calendar#colors",
+            "event": {"7": {"background": "#46d6db", "foreground": "#1d1d1d"}},
+            "calendar": {"1": {"background": "#ac725e", "foreground": "#1d1d1d"}},
+        }
+    )
+    calendar_service = await calendar_service_cb()
+    colors = await calendar_service.async_get_colors()
+    assert url_request() == ["/colors"]
+    assert colors == ColorsResponse(
+        event={"7": ColorDefinition(background="#46d6db", foreground="#1d1d1d")},
+        calendar={"1": ColorDefinition(background="#ac725e", foreground="#1d1d1d")},
+    )
+
+
 async def test_get_event(
     calendar_service_cb: Callable[[], Awaitable[GoogleCalendarService]],
     json_response: ApiResult,
@@ -118,6 +143,7 @@ async def test_get_event(
             "id": "some-event-id-1",
             "summary": "Event 1",
             "description": "Event description 1",
+            "colorId": "7",
             "start": {
                 "date": "2022-04-13",
             },
@@ -137,6 +163,7 @@ async def test_get_event(
         id="some-event-id-1",
         summary="Event 1",
         description="Event description 1",
+        color_id="7",
         start=DateOrDatetime(date=datetime.date(2022, 4, 13)),
         end=DateOrDatetime(date=datetime.date(2022, 4, 14)),
         transparency="transparent",
